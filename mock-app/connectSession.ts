@@ -29,7 +29,9 @@ export async function connectSession(): Promise<SshClientSession> {
     };
 
     const authResult = await session.authenticate(credentials);
-    console.log(`Authenticated: ${authResult}`);
+    if (!authResult) {
+        throw new Error("Failed to authenticate");
+    }
 
     return session;
 }

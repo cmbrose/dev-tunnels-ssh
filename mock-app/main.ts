@@ -22,48 +22,31 @@ async function main(): Promise<void> {
     execRequestMessage.command = 'cd /workspaces/dev-tunnels-ssh/mock-app/express-app && npm run start';
     channel.request(execRequestMessage);
 
+    const sendSignal = async (signal: 'INT' | 'TERM' | 'KILL') => {
+        const signalMessage = new ChannelSignalMessage();
+        signalMessage.recipientChannel = channel.remoteChannelId;
+        signalMessage.signal = signal;
+        await session.sendMessage(signalMessage);
+    };
+
     const stdin = process.openStdin();
 
     stdin.addListener("data", async function(d) {
         const c = d.toString().trim();
 
         if (c === 'q') {
-            console.log("sending close");
-            const closeResult = await channel.close();
-            console.log(`closeResult: ${closeResult}`)
-
-            console.log("exiting");
+            console.log("closing and exiting");
+            await channel.close();
             process.exit(0)
-        }
-        if (c === 'i') {
+        } else if (c === 'i') {
             console.log("sending sigint");
-
-            const signalMessage = new ChannelSignalMessage();
-			signalMessage.recipientChannel = channel.remoteChannelId;
-			signalMessage.signal = 'INT';
-			const sigintResult = await session.sendMessage(signalMessage);
-
-            console.log(`sigintResult: ${sigintResult}`)
-        }
-        if (c === 't') {
+            await sendSignal('INT');
+        } else if (c === 't') {
             console.log("sending sigterm");
-
-            const signalMessage = new ChannelSignalMessage();
-			signalMessage.recipientChannel = channel.remoteChannelId;
-			signalMessage.signal = 'TERM';
-			const sigintResult = await session.sendMessage(signalMessage);
-
-            console.log(`sigintResult: ${sigintResult}`)
-        }
-        if (c === 'k') {
+            await sendSignal('TERM');
+        } else if (c === 'k') {
             console.log("sending sigkill");
-
-            const signalMessage = new ChannelSignalMessage();
-			signalMessage.recipientChannel = channel.remoteChannelId;
-			signalMessage.signal = 'KILL';
-			const sigintResult = await session.sendMessage(signalMessage);
-
-            console.log(`sigintResult: ${sigintResult}`)
+            await sendSignal('KILL');
         }
     });
 }

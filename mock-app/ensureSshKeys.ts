@@ -3,8 +3,21 @@ import * as fs from 'fs';
 import * as sshpk from 'sshpk';
 
 export async function ensureSshKeys(): Promise<string> {
-    if (fs.existsSync('/home/codespace/.ssh/tunnels_ssh_test_app')) {
-        return fs.readFileSync('/home/codespace/.ssh/tunnels_ssh_test_app','utf8');
+    const sshDir = '/home/codespace/.ssh';
+
+    if (!fs.existsSync(sshDir)) {
+        fs.mkdirSync(sshDir);
+    }
+
+    const sshdConfig = fs.readFileSync('/etc/ssh/sshd_config', 'utf8');
+    if (sshdConfig.match(/#\s*AuthorizedKeysFile/)) {
+        console.warn('--------------------------------------------------------------------------------');
+        console.warn('It looks like you need to uncomment AuthorizedKeysFile in /etc/ssh/sshd_config!');
+        console.warn('--------------------------------------------------------------------------------');
+    }
+
+    if (fs.existsSync(`${sshDir}/tunnels_ssh_test_app`)) {
+        return fs.readFileSync(`${sshDir}/tunnels_ssh_test_app`, 'utf8');
     }
 
     const keyPair = await subtle.generateKey(
@@ -32,9 +45,9 @@ export async function ensureSshKeys(): Promise<string> {
 
     const sshPublicKey = sshpk.parseKey(publicKetString, "pem").toString('ssh');
 
-    fs.writeFileSync('/home/codespace/.ssh/tunnels_ssh_test_app', privateKeyString);
-    fs.writeFileSync('/home/codespace/.ssh/tunnels_ssh_test_app.pub', sshPublicKey);
-    fs.appendFileSync('/home/codespace/.ssh/authorized_keys', sshPublicKey);
+    fs.writeFileSync(`${sshDir}/tunnels_ssh_test_app`, privateKeyString);
+    fs.writeFileSync(`${sshDir}/tunnels_ssh_test_app.pub`, sshPublicKey);
+    fs.appendFileSync(`${sshDir}/authorized_keys`, sshPublicKey);
 
     return privateKeyString;
 }
