@@ -7,7 +7,7 @@
 	},
 	"include": [
 		"**/*.ts",
-		"package.json"
+		"package.json",
 	],
 	"references": []
 }
