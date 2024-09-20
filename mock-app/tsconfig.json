@@ -1,0 +1,12 @@
+{
+	"extends": "../../../tsconfig.json",
+	"compilerOptions": {
+		"outDir": "../../../out/lib/ssh",
+		"rootDir": "."
+	},
+	"include": [
+		"**/*.ts",
+		"package.json",
+	],
+	"references": []
+}
